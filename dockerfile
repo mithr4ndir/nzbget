@@ -32,7 +32,8 @@ WORKDIR /app
 RUN curl -fsSL "https://github.com/nzbget/nzbget/releases/download/v${NZBGET_VERSION}/nzbget-${NZBGET_VERSION}-bin-linux.run" -o nzbget.run \
  && chmod +x nzbget.run \
  && ./nzbget.run --destdir /app \
- && rm nzbget.run
+ && rm nzbget.run \
+ && ln -s /app/nzbget /usr/local/bin/nzbget
 
 # Preseed a default config if none exists at runtime
 COPY nzbget.conf /defaults/nzbget.conf
