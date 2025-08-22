@@ -45,6 +45,7 @@ VOLUME ["/config", "/downloads"]
 
 # Entrypoint script to drop privileges and ensure config exists
 COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 ENTRYPOINT ["/usr/bin/tini","--","/usr/local/bin/docker-entrypoint.sh"]
 
 # Default: run NZBGet in daemonized server mode bound to 0.0.0.0
