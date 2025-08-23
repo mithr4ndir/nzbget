@@ -11,12 +11,8 @@ fi
 umask "${UMASK:-002}"
 
 # Best-effort ownership fixes (skip on NFS root_squash)
-if [[ -w /config ]]; then
-  chown -R app:app /config || true
-fi
-if [[ -w /downloads ]]; then
-  chown -R app:app /downloads || true
-fi
+[[ -w /config ]] && chown -R app:app /config || true
+[[ -w /downloads ]] && chown -R app:app /downloads || true
 
 # Seed config only if target is writable and file missing
 if [[ ! -f /config/nzbget.conf ]]; then
