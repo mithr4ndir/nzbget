@@ -33,6 +33,7 @@ RUN curl -fsSL "https://github.com/nzbget/nzbget/releases/download/v${NZBGET_VER
  && chmod +x nzbget.run \
  && ./nzbget.run --destdir /app \
  && rm nzbget.run \
+ && cp /app/nzbget.conf /app/webui/nzbget.conf \
  && ln -s /app/nzbget /usr/local/bin/nzbget
 
 # Preseed a default config if none exists at runtime
@@ -50,4 +51,4 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 ENTRYPOINT ["/usr/bin/tini","--","/usr/local/bin/docker-entrypoint.sh"]
 
 # Default: run NZBGet in daemonized server mode bound to 0.0.0.0
-CMD ["nzbget","-s","-c","/config/nzbget.conf","-o","WebDir=/app/webui","-o","ControlIP=0.0.0.0","-o","ControlPort=6789"]
+CMD ["/app/nzbget","-s","-c","/config/nzbget.conf","-o","WebDir=/app/webui","-o","ControlIP=0.0.0.0","-o","ControlPort=6789"]
