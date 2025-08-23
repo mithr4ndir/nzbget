@@ -53,4 +53,4 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 ENTRYPOINT ["/usr/bin/tini","--","/usr/local/bin/docker-entrypoint.sh"]
 
 # Default: run NZBGet in daemonized server mode bound to 0.0.0.0
-CMD ["/app/nzbget","-s","-c","/config/nzbget.conf","-o","WebDir=/app/webui","-o","ControlIP=0.0.0.0","-o","ControlPort=6789"]
+CMD ["/app/nzbget","-s","-c","/config/nzbget.conf","-o","WebDir=/app/webui","-o","ConfigTemplate=/app/webui/nzbget.conf","-o","ControlIP=0.0.0.0","-o","ControlPort=6789"]
