@@ -5,6 +5,7 @@ FROM debian:stable-slim
 ENV NZBGET_VERSION=21.1 \
     PUID=1000 \
     PGID=1000 \
+    TERM=xterm \
     TZ=Etc/UTC \
     UMASK=002 \
     NZBGET_HOME=/config \
@@ -19,6 +20,7 @@ RUN apt-get update && \
       tini \
       gosu \
       tzdata \
+      ncurses-base \
     && rm -rf /var/lib/apt/lists/*
 
 # Create app user/group
