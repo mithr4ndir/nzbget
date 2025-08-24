@@ -1,33 +1,31 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Map UID/GID at runtime if provided (non-fatal if it fails)
+# Map UID/GID (best-effort)
 if [[ -n "${PUID:-}" || -n "${PGID:-}" ]]; then
   [[ -n "${PGID:-}" ]] && groupmod -o -g "${PGID}" app || true
   [[ -n "${PUID:-}" ]] && usermod  -o -u "${PUID}" app || true
 fi
 
-# Ensure umask early
+# Cooperative permissions
 umask "${UMASK:-002}"
 
-# Best-effort ownership fixes (skip on NFS root_squash)
-[[ -w /config ]] && chown -R app:app /config || true
+# Best-effort ownership (don’t fail on NFS root_squash)
+[[ -w /config    ]] && chown -R app:app /config    || true
 [[ -w /downloads ]] && chown -R app:app /downloads || true
 
-# Seed config only if target is writable and file missing
-if [[ ! -f /config/nzbget.conf ]]; then
-  if [[ -w /config ]]; then
-    cp /defaults/nzbget.conf /config/nzbget.conf || true
-    chown app:app /config/nzbget.conf || true
-  else
-    echo "WARN: /config not writable; skipping seed. Provide /config/nzbget.conf via PVC/volume."
-  fi
+# Seed runtime config if missing; create as app:app so it's writable on NFS
+if [[ ! -f /config/nzbget.conf && -w /config ]]; then
+  gosu app:app sh -lc 'cp /defaults/nzbget.conf /config/nzbget.conf && chmod 664 /config/nzbget.conf'
+elif [[ -f /config/nzbget.conf ]]; then
+  # ensure writable by group (cooperate with other *arr apps)
+  chmod g+w /config/nzbget.conf || true
 fi
 
-# Apply TZ (best-effort)
+# Best-effort TZ
 if [[ -n "${TZ:-}" ]]; then
-  ln -snf "/usr/share/zoneinfo/${TZ}" /etc/localtime && echo "${TZ}" > /etc/timezone || true
+  ln -snf "/usr/share/zoneinfo/${TZ}" /etc/localtime && echo "${TZ}" >/etc/timezone || true
 fi
 
-# Drop to app user
+# Run as non-root
 exec gosu app:app "$@"
