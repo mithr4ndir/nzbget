@@ -39,9 +39,4 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 ENTRYPOINT ["/usr/bin/tini","--","/usr/local/bin/docker-entrypoint.sh"]
 
 # IMPORTANT: point NZBGet at both WebDir and ConfigTemplate
-CMD ["/app/nzbget","-s",
-     "-c","/config/nzbget.conf",
-     "-o","WebDir=/app/webui",
-     "-o","ConfigTemplate=/app/webui/nzbget.conf",
-     "-o","ControlIP=0.0.0.0",
-     "-o","ControlPort=6789"]
+CMD ["/app/nzbget","-s","-c","/config/nzbget.conf","-o","WebDir=/app/webui","-o","ConfigTemplate=/app/webui/nzbget.conf","-o","ControlIP=0.0.0.0","-o","ControlPort=6789"]
