@@ -1,58 +1,25 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Helpers
-ensure_dir() {
-  local d="$1"
-  if [[ ! -d "$d" ]]; then
-    mkdir -p "$d" || true
-  fi
-  # Best-effort cooperative perms: 775 + setgid for group inheritance
-  chmod 2775 "$d" || true
-  chown app:app "$d" || true
-}
-
-# Map UID/GID (best-effort, only if different)
-if [[ -n "${PGID:-}" ]]; then
-  if [[ "$(getent group app | awk -F: '{print $3}')" != "${PGID}" ]]; then
-    groupmod -o -g "${PGID}" app || true
-  fi
-fi
-if [[ -n "${PUID:-}" ]]; then
-  if [[ "$(id -u app)" != "${PUID}" ]]; then
-    usermod -o -u "${PUID}" app || true
-  fi
+# Map UID/GID (best-effort)
+if [[ -n "${PUID:-}" || -n "${PGID:-}" ]]; then
+  [[ -n "${PGID:-}" ]] && groupmod -o -g "${PGID}" app || true
+  [[ -n "${PUID:-}" ]] && usermod  -o -u "${PUID}" app || true
 fi
 
-# UMASK: validate, default to 002
-UMASK_VAL="${UMASK:-002}"
-if [[ ! "$UMASK_VAL" =~ ^0?[0-7]{3}$ ]]; then
-  UMASK_VAL="002"
-fi
-umask "$UMASK_VAL"
+# Cooperative permissions
+umask "${UMASK:-002}"
 
-# Ensure key dirs exist with cooperative perms
-ensure_dir /config
-ensure_dir /downloads
+# Best-effort ownership (don’t fail on NFS root_squash)
+[[ -w /config    ]] && chown -R app:app /config    || true
+[[ -w /downloads ]] && chown -R app:app /downloads || true
 
-# Light-touch ownership on dirs only (avoid -R; safer on NFS)
-chown app:app /config    || true
-chown app:app /downloads || true
-
-# Seed runtime config if missing; secure perms (660) and cooperative group
+# Seed runtime config if missing; create as app:app so it's writable on NFS
 if [[ ! -f /config/nzbget.conf && -w /config ]]; then
-  # install: mode 660, owner:group app:app
-  install -m 660 -o app -g app /defaults/nzbget.conf /config/nzbget.conf || true
+  gosu app:app sh -lc 'cp /defaults/nzbget.conf /config/nzbget.conf && chmod 664 /config/nzbget.conf'
 elif [[ -f /config/nzbget.conf ]]; then
-  # Make it group-writable and owned by app:app (best-effort)
-  chgrp app /config/nzbget.conf || true
-  chmod 660 /config/nzbget.conf || true
-fi
-
-# Optional: default ACLs for group inheritance (if setfacl present)
-if command -v setfacl >/dev/null 2>&1; then
-  setfacl -m g:app:rwx -m d:g:app:rwx /config 2>/dev/null || true
-  setfacl -m g:app:rwx -m d:g:app:rwx /downloads 2>/dev/null || true
+  # ensure writable by group (cooperate with other *arr apps)
+  chmod g+w /config/nzbget.conf || true
 fi
 
 # Best-effort TZ
