@@ -7,7 +7,7 @@ on:
       version:
         description: "Tag to publish (e.g., 21.1)"
         required: true
-        default: "21.1.4"
+        default: "25.3.0"
       make_latest:
         description: "Also tag as latest?"
         required: true

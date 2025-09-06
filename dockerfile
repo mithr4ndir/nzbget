@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 FROM debian:stable-slim
 
-ENV NZBGET_VERSION=21.1 \
+ENV NZBGET_VERSION=25.3 \
     PUID=1000 PGID=1000 UMASK=002 TZ=Etc/UTC \
     NZBGET_PORT=6789 TERM=xterm
 
